@@ -16,4 +16,7 @@ export displace,
     phaseshift, squeeze, squeeze2, partialtrace, beamsplitter, lossybeamsplitter
 include("operations.jl")
 
+export issymplectic, williamson, randposdef
+include("decompositions.jl")
+
 end # module GaussianBosonSampling
