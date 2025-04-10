@@ -1,4 +1,4 @@
-module GaussianBosonSampling
+module GaussianStates
 
 using Permutations, LinearAlgebra, Random
 
@@ -10,7 +10,7 @@ export GaussianState,
     random_symplectic,
     random_gaussianstate,
     number
-include("gaussian_states.jl")
+include("states.jl")
 
 export displace,
     phaseshift, squeeze, squeeze2, partialtrace, beamsplitter, lossybeamsplitter
@@ -19,4 +19,4 @@ include("operations.jl")
 export issymplectic, williamson, randposdef
 include("decompositions.jl")
 
-end # module GaussianBosonSampling
+end # module GaussianStates

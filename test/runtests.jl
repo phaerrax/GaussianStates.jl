@@ -1,5 +1,5 @@
 using Test
-using GaussianBosonSampling, LinearAlgebra
+using GaussianStates, LinearAlgebra
 
 include("decompositions.jl")
 @testset "Williamson decomposition" begin
