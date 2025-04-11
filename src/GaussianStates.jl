@@ -13,7 +13,18 @@ export GaussianState,
 include("states.jl")
 
 export displace,
-    phaseshift, squeeze, squeeze2, partialtrace, beamsplitter, lossybeamsplitter
+    displace!,
+    phaseshift,
+    phaseshift!,
+    squeeze,
+    squeeze!,
+    squeeze2,
+    squeeze2!,
+    beamsplitter,
+    beamsplitter!,
+    lossybeamsplitter,
+    lossybeamsplitter!,
+    partialtrace
 include("operations.jl")
 
 export issymplectic, williamson, randposdef, takagiautonne
