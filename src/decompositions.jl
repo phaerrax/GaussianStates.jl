@@ -93,3 +93,79 @@ function williamson(M)
     V = sqrtM * K[:, perm] * sqrt(D⁻¹)
     return inv(D⁻¹), V  # V * D * transpose(V) ≈ M
 end
+
+function heaviside(x1, x2)
+    return if x1 < 0
+        0
+    elseif iszero(x1)
+        x2
+    else
+        1
+    end
+end
+
+"""
+    takagiautonne(A; svd_order=true)
+
+Compute the Takagi-Autonne decomposition of the complex symmetric matrix `A`.
+Return `D`, `U` such that `A = U D Uᵀ`.
+
+Set `svd_order` to `true` (the default) to return the result by ordering the singular
+values of `A` in descending order, `false` for ascending order.
+"""
+function takagiautonne(A; svd_order=true)
+    # "Translated" from Python to Julia from The Walrus: see
+    # https://the-walrus.readthedocs.io/en/latest/_modules/thewalrus/decompositions.html
+    n, m = size(A)
+    if n != m
+        throw(ArgumentError("input matrix is not square"))
+    end
+
+    # If the matrix A is real we can be more clever and use its eigendecomposition.
+    if isreal(A)
+        vals, U = eigen(A)
+        singular_values = abs.(vals)  # Takagi eigenvalues
+        signs = (-1) .^ (1 .+ heaviside.(vals, 1))
+        phases = sqrt.(complex.(signs))
+        Uc = U * Diagonal(phases)  # readjust the phases
+        # Find the permutation to sort the Takagi eigenvalues in decreasing order
+        perm = sortperm(singular_values)
+        # if svd_order reverse it
+        if svd_order
+            perm = reverse(perm)
+        end
+        return Diagonal(singular_values[perm]), Uc[:, perm]
+    end
+
+    # Find the element with the largest absolute value
+    pos = argmax(abs.(A))
+    # Use it to find whether the input is (approximately) a global phase times a real matrix
+    phi = angle(A[pos])
+    Amr = exp(-im * phi) * A
+    if Amr ≈ real(Amr)
+        vals, U = takagiautonne(real(Amr); svd_order=svd_order)
+        return Diagonal(vals), U * cis(phi / 2)
+    end
+
+    # If the matrix is diagonal, Takagi decomposition is easy
+    if A ≈ Diagonal(A)
+        d = Diagonal(A)
+        l = abs.(d)
+        idx = sortperm(l)
+        U = Diagonal(cis.(angle.(d[idx]) ./ 2))
+        U = reverse(U; dims=1)
+        if svd_order
+            return reverse(l[idx]), U[:, end:-1:1]
+        end
+        return Diagonal(l[idx]), U
+    end
+
+    # General method, for all other (symmetric) matrices.
+    # FIXME it doesn't work...
+    u, d, v = svd(A)
+    U = u * sqrt(transpose(v * conj(u)))
+    if !svd_order
+        return reverse(d), U[:, end:-1:1]
+    end
+    return Diagonal(d), U
+end
