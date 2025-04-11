@@ -21,6 +21,6 @@ end
     @testset "with a non-real matrix" begin
         a = rand(ComplexF64, n, n)
         a = (a + transpose(a)) / 2
-        @test_skip takagiautonne_check(a)
+        @test takagiautonne_check(a)
     end
 end

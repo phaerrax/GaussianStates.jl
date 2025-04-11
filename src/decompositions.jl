@@ -161,9 +161,8 @@ function takagiautonne(A; svd_order=true)
     end
 
     # General method, for all other (symmetric) matrices.
-    # FIXME it doesn't work...
-    u, d, v = svd(A)
-    U = u * sqrt(transpose(v * conj(u)))
+    u, d, v = svd(A)  # Note that A = u * Diagonal(d) * v' (not v!)
+    U = u * sqrt(u' * conj(v))
     if !svd_order
         return reverse(d), U[:, end:-1:1]
     end
