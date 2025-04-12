@@ -70,17 +70,14 @@ Return the vacuum state on `n` modes.
 vacuumstate(n) = GaussianState(zeros(2n), float.(I(2n)))
 
 """
-    thermalstate(n, β, ω)
+    thermalstate(n, β, ω::AbstractVector)
 
 Return the thermal state on `n` modes with inverse temperature `β` and frequency `ω[k]`
 for each mode `k`.
 """
-function thermalstate(n, β, ω)
-    σ = zeros(2n, 2n)
-    for j in 1:n
-        σ[(2j - 1):(2j), (2j - 1):(2j)] .= (1 / expm1(β * ω[j]) + 1 / 2) .* I(2)
-    end
-    return GaussianState(zeros(2n), σ)
+function thermalstate(n, β, ω::AbstractVector)
+    λ = 1 .+ 2 ./ expm1.(β * ω)
+    return GaussianState(zeros(2n), Diagonal(permute_to_xpxp([λ; λ])))
 end
 
 function number(g::GaussianState)
