@@ -45,3 +45,19 @@ function takagiautonne_check(A)
     # Check that actually A = W D Wᵀ
     return A ≈ W * D * transpose(W)
 end
+
+function euler_check(n)
+    s = randsymplectic(n)
+    l, d, r = euler(s)
+
+    if !(issymplectic(l) && l * l' ≈ I && l' * l ≈ I)
+        println("L matrix not symplectic or orthogonal")
+        return false
+    end
+    if !(issymplectic(r) && r * r' ≈ I && r' * r ≈ I)
+        println("R matrix not symplectic or orthogonal")
+        return false
+    end
+
+    return l * d * r ≈ s
+end

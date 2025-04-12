@@ -30,3 +30,7 @@ end
         @test takagiautonne_check(a)
     end
 end
+
+@testset "Euler decomposition" begin
+    @test euler_check(8)
+end

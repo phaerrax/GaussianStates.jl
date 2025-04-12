@@ -1,6 +1,7 @@
 module GaussianStates
 
 using LinearAlgebra
+using MatrixFactorizations: polar
 
 export GaussianState,
     vacuumstate, nmodes, is_valid_covariance_matrix, thermalstate, randsymplectic, number
@@ -21,7 +22,7 @@ export displace,
     partialtrace
 include("operations.jl")
 
-export issymplectic, williamson, randposdef, takagiautonne
+export issymplectic, williamson, randposdef, takagiautonne, euler
 include("decompositions.jl")
 
 end # module GaussianStates

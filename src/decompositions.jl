@@ -98,10 +98,11 @@ end
     takagiautonne(A; svd_order=true)
 
 Compute the Takagi-Autonne decomposition of the complex symmetric matrix `A`.
-Return `D`, `U` such that `A = U D Uᵀ`.
+Return `D`, `U` such that `A = U D Uᵀ`, where `D` is a diagonal, positive-semidefinite
+matrix and `U` is unitary.
 
-Set `svd_order` to `true` (the default) to return the result by ordering the singular
-values of `A` in descending order, `false` for ascending order.
+Set `svd_order` to `true` (the default) to return the result by ordering the diagonal
+values of `D` in descending order, `false` for ascending order.
 """
 function takagiautonne end
 
@@ -166,4 +167,78 @@ function takagiautonne(A; svd_order=true)
         return Diagonal(reverse(d)), U[:, end:-1:1]
     end
     return Diagonal(d), U
+end
+
+"""
+    euler(M)
+
+Compute the Euler, or Bloch-Messiah, decomposition of the symplectic matrix `M`.
+Return `L`, `D`, `R` such that `L * D * R = M`, where `L` and `R` are orthogonal symplectic
+matrices with respect to the matrix
+
+```math
+Ω = Iₙ ⊗  ⎛  0  1 ⎞
+            ⎝ -1  0 ⎠
+```
+
+and `D` is a diagonal matrix which can be written as
+
+```math
+⎛ d₁   0  ⎞ ⊕ ⎛ d₂   0  ⎞ ⊕ ... ⊕ ⎛ dₙ   0  ⎞
+  ⎝ 0  1/d₁ ⎠   ⎝ 0  1/d₂ ⎠         ⎝ 0  1/dₙ ⎠
+```
+
+with ``dⱼ ≥ 1``.
+"""
+function euler(M)
+    n = div(size(M, 1), 2)
+    xxpp = [1:2:(2n); 2:2:(2n)]
+    xpxp = invperm(xxpp)
+    L, D, R = _euler_xxpp(M[xxpp, xxpp])
+    @assert L * D * R ≈ M[xxpp, xxpp]
+
+    return L[xpxp, xpxp], D[xpxp, xpxp], R[xpxp, xpxp]
+end
+
+function _euler_xxpp(M)
+    # Here M is assumed to be symplectic with respect to the matrix
+    #
+    #   ⎛  0   Iₙ ⎞
+    #   ⎝ -Iₙ  0  ⎠
+    #
+    # and the output will be symplectic according to this matrix, too.
+    @assert size(M, 1) == size(M, 2) && iseven(size(M, 1))
+    n = div(size(M, 1), 2)
+
+    U, P = polar(M)  # U * P ≈ M with U unitary and P ≥ 0 (both of the same size as M)
+    A =
+        1 / 2 .* (
+            P[1:n, 1:n] .- P[(n + 1):(2n), (n + 1):(2n)] .+
+            im .* (P[1:n, (n + 1):(2n)] .+ P[(n + 1):(2n), 1:n])
+        )
+    Σ, W = takagiautonne(A)  # A ≈ W Σ Wᵀ
+
+    Q = [real(W) -imag(W); imag(W) real(W)]
+
+    Γ = Σ + sqrt(I + Σ^2)  # No need to broadcast here, everything is a Diagonal object
+    D = Diagonal(M)  # We just need a 2n×2n Diagonal matrix, we'll overwrite the contents
+    D[1:n, 1:n] .= Γ
+    D[(n + 1):(2n), (n + 1):(2n)] .= Γ - 2Σ  # == inv(Γ)
+
+    L = U * Q
+    R = Q'
+    return L, D, R
+    # These matrices satisfy L D R = M, but they are symplectic with respect to
+    #
+    #   ⎛  0   Iₙ ⎞
+    #   ⎝ -Iₙ  0  ⎠
+    #
+    # and not with the antisymmetric matrix Ω we use in this package. In other words, they
+    # are in the xxpp representation, and we need the xpxp one.
+    # If P is the xxpp → xpxp permutation matrix then
+    #        M = L D R
+    #   P M Pᵀ = P L Pᵀ P D Pᵀ P R Pᵀ
+    #   ╰────╯   ╰────╯ ╰────╯ ╰────╯
+    #     Mₚ   =   Lₚ     Dₚ     Rₚ
+    # and the ₚ-matrices will be symplectic in the "correct" way.
 end
