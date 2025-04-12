@@ -126,17 +126,16 @@ function permute_to_xpxp(m::AbstractMatrix)
 end
 
 """
-	random_symplectic(n)
+	randsymplectic(n)
 
 Generate a random ``2n × 2n`` real symplectic matrix such that ``S Ω Sᵀ = Ω`` with
 
 ```
-    ⎛  0  Iₙ ⎞
-Ω = ⎜        ⎟
-    ⎝ -Iₙ  0 ⎠
+Ω = Iₙ ⊗  ⎛  0  1 ⎞
+            ⎝ -1  0 ⎠
 ```
 """
-function random_symplectic(n)
+function randsymplectic(n)
     A = rand(n, n)
     B = rand(n, n)
     C = rand(n, n)
@@ -145,7 +144,7 @@ function random_symplectic(n)
     m[1:n, (n + 1):(2n)] .= Symmetric(B)
     m[(n + 1):(2n), 1:n] .= Symmetric(C)
     m[(n + 1):(2n), (n + 1):(2n)] .= -transpose(A)
-    return exp(m)
+    return permute_to_xpxp(exp(m))
 end
 
 #=

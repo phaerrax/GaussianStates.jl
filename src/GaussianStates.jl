@@ -3,13 +3,7 @@ module GaussianStates
 using LinearAlgebra
 
 export GaussianState,
-    vacuumstate,
-    nmodes,
-    is_valid_covariance_matrix,
-    thermalstate,
-    random_symplectic,
-    random_gaussianstate,
-    number
+    vacuumstate, nmodes, is_valid_covariance_matrix, thermalstate, randsymplectic, number
 include("states.jl")
 
 export displace,
