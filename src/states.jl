@@ -89,8 +89,8 @@ end
 
 function permute_to_xxpp(v::AbstractVector)
     n = div(length(v), 2)
-    P = Matrix(Permutation([1:2:(2n); 2:2:(2n)]))
-    # This `P` implements the following permutation:
+    xxpp = [1:2:(2n); 2:2:(2n)]
+    # This `xxpp` implements the following permutation:
     #
     #   ⎛ 1 2 3 4 ...  n-1   n  n+1 n+2 ... 2n-2 2n-1 2n ⎞
     #   ⎝ 1 3 5 7 ... 2n-3 2n-1  2   4  ... 2n-4 2n-2 2n ⎠
@@ -102,27 +102,27 @@ function permute_to_xxpp(v::AbstractVector)
     # into
     #
     #   (x_1, x_2, ... x_n, p_1, p_2, ... p_n).
-    return P * v
+    return v[xxpp]
 end
 
 function permute_to_xxpp(m::AbstractMatrix)
     n = div(size(m, 1), 2)
-    P = Matrix(Permutation([1:2:(2n); 2:2:(2n)]))
-    return transpose(P) * m * P
+    xxpp = [1:2:(2n); 2:2:(2n)]
+    return m[xxpp, xxpp]
 end
 
 function permute_to_xpxp(v::AbstractVector)
     # We use the inverse of the permutation defined in `permute_to_xxpp`.
     n = div(length(v), 2)
-    P = Matrix(Permutation([1:2:(2n); 2:2:(2n)]))
-    return transpose(P) * v
+    xpxp = invperm([1:2:(2n); 2:2:(2n)])
+    return v[xpxp]
 end
 
 function permute_to_xpxp(m::AbstractMatrix)
     # We use the inverse of the permutation defined in `permute_to_xxpp`.
     n = div(size(m, 1), 2)
-    P = Matrix(Permutation([1:2:(2n); 2:2:(2n)]))
-    return P * m * transpose(P)
+    xpxp = invperm([1:2:(2n); 2:2:(2n)])
+    return m[xpxp, xpxp]
 end
 
 """

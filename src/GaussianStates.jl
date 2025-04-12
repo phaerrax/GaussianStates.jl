@@ -1,6 +1,6 @@
 module GaussianStates
 
-using Permutations, LinearAlgebra, Random
+using LinearAlgebra
 
 export GaussianState,
     vacuumstate,
