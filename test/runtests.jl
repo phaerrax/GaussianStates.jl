@@ -1,6 +1,32 @@
 using Test
 using GaussianStates, LinearAlgebra
 
+@testset verbose = true "Photon number counting" begin
+    @testset "coherent state" begin
+        n = 2
+        α = rand(ComplexF64, n)
+        g = vacuumstate(n)
+        displace!(g, α)
+        @test number(g) ≈ norm(α)^2
+    end
+    @testset "thermal state" begin
+        n = 4
+        β = 2
+        ω = rand(n)
+        g = thermalstate(n, β, ω)
+        @test number(g) ≈ sum(1 ./ expm1.(β .* ω))
+    end
+    @testset "with beam splitter" begin
+        n = 4
+        g = vacuumstate(n)
+        squeeze!(g, rand(ComplexF64, n))
+        pre_splitter_N = number(g)
+        beamsplitter!(g, rand(), 2, 4)
+        post_splitter_N = number(g)
+        @test pre_splitter_N ≈ post_splitter_N
+    end
+end
+
 include("decompositions.jl")
 @testset "Williamson decomposition" begin
     @test williamson_check(8)
