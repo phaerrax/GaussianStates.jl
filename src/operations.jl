@@ -25,9 +25,7 @@ parameter `α[k]` on mode `k`.
 """
 function displace!(g::GaussianState, α::AbstractVector)
     d = sqrt(2) .* [real.(α); imag.(α)]
-    n = length(α)
-    invpermute!(d, [1:2:n; 2:2:n])
-    return symplectic_transform!(g, d)
+    return symplectic_transform!(g, permute_to_xpxp(d))
 end
 
 """
