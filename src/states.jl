@@ -84,7 +84,7 @@ function thermalstate(n, β, ω)
 end
 
 function number(g::GaussianState)
-    return 0.5tr(g.covariance_matrix) + 0.5norm(g.first_moments)^2 - 0.5nmodes(g)
+    return 1 / 4 * tr(g.covariance_matrix) + 1 / 2 * norm(g.first_moments)^2 - nmodes(g) / 2
 end
 
 function permute_to_xxpp(v::AbstractVector)
