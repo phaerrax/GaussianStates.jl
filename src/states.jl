@@ -67,7 +67,7 @@ nmodes(g::GaussianState) = div(length(g.first_moments), 2)
 
 Return the vacuum state on `n` modes.
 """
-vacuumstate(n) = GaussianState(zeros(2n), float.(I(2n)))
+vacuumstate(n) = GaussianState(zeros(2n), Matrix{Float64}(I, 2n, 2n))
 
 """
     thermalstate(n, β, ω::AbstractVector)
@@ -77,7 +77,7 @@ for each mode `k`.
 """
 function thermalstate(n, β, ω::AbstractVector)
     λ = 1 .+ 2 ./ expm1.(β * ω)
-    return GaussianState(zeros(2n), Diagonal(permute_to_xpxp([λ; λ])))
+    return GaussianState(zeros(2n), diagm(permute_to_xpxp([λ; λ])))
 end
 
 function number(g::GaussianState)
