@@ -67,7 +67,7 @@ nmodes(g::GaussianState) = div(length(g.first_moments), 2)
 
 Return the vacuum state on `n` modes.
 """
-vacuumstate(n) = GaussianState(zeros(2n), float.(0.5 * I(2n)))
+vacuumstate(n) = GaussianState(zeros(2n), float.(I(2n)))
 
 """
     thermalstate(n, β, ω)
