@@ -244,6 +244,21 @@ Transform the Gaussian state `g` with lossy a beam splitter on modes `k1` and `k
 given `transmittivity` and `loss` parameters.
 """
 function lossybeamsplitter!(g::GaussianState, transmittivity, loss, k1, k2)
+    g_lbs = lossybeamsplitter(g, transmittivity, loss, k1, k2)
+
+    # Replace the original g's moments with g_lbs's ones.
+    g.first_moments .= g_lbs.first_moments
+    g.covariance_matrix .= g_lbs.covariance_matrix
+    return g
+end
+
+"""
+    lossybeamsplitter(g::GaussianState, transmittivity, loss, k1, k2)
+
+Variant of [`lossybeamsplitter!`](@ref) that returns a transformed copy of `g` leaving `g`
+itself unmodified.
+"""
+function lossybeamsplitter(g::GaussianState, transmittivity, loss, k1, k2)
     # We generate the lossy beam splitter between modes k1 and k2 as follows:
     # 1. add two new modes a1 and a2 in the vacuum
     # 2. interaction between k1 and k2
@@ -255,19 +270,9 @@ function lossybeamsplitter!(g::GaussianState, transmittivity, loss, k1, k2)
     aux1 = nmodes(g) + 1  # indices of the auxiliary modes
     aux2 = nmodes(g) + 2
 
-    g_ext = beamsplitter(g_ext, transmittivity, k1, k2)
-    g_ext = beamsplitter(g_ext, loss, k1, aux1)
-    g_ext = beamsplitter(g_ext, loss, k2, aux2)
+    beamsplitter!(g_ext, transmittivity, k1, k2)
+    beamsplitter!(g_ext, loss, k1, aux1)
+    beamsplitter!(g_ext, loss, k2, aux2)
+
     return partialtrace(g_ext, [aux1, aux2])
-end
-
-"""
-    lossybeamsplitter(g::GaussianState, transmittivity, loss, k1, k2)
-
-Variant of [`lossybeamsplitter!`](@ref) that returns a transformed copy of `g` leaving `g`
-itself unmodified.
-"""
-function lossybeamsplitter(g::GaussianState, transmittivity, loss, k1, k2)
-    h = GaussianState(copy(g.first_moments), copy(g.covariance_matrix))
-    return lossybeamsplitter!(h, transmittivity, loss, k1, k2)
 end
