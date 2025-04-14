@@ -22,22 +22,66 @@ julia> Ω(2)
 """
 Ω(n) = kron(I(n), [[0, -1] [1, 0]])
 
-function is_valid_covariance_matrix(σ; atol=0)
+"""
+    is_valid_covariance_matrix(σ; atol, rtol)
+
+Test whether the matrix `σ` satisfies the conditions to be a covariance matrix for a
+Gaussian state, i.e. is a ``2n × 2n`` symmetric matrix such that ``σ > 0`` and
+``σ + iΩ ≥ 0``.
+
+Keyword arguments are forwarded to `isapprox` to adjust the numerical thresholds of the
+inexact equality comparisons; `atol` defaults to `eps(eltype(σ)) * norm(σ)` when comparing
+with zero.
+"""
+function is_valid_covariance_matrix(σ; kwargs...)
     if size(σ, 1) != size(σ, 2)
-        error("not a square matrix.")
+        println("Not a square matrix.")
         return false
     end
     n = size(σ, 1)
     if !iseven(n)
-        error("odd number of rows.")
+        println("Odd number of rows.")
         return false
     end
-    if eigmin(σ) < -atol
-        error("not a positive semi-definite matrix.")
+
+    # It usually happens after some numerical calculations that σ is slightly asymmetric
+    # and ‖σᵀ-σ‖ is "practically" zero, but not precisely zero. In this cases
+    # calling `isposdef` returns false since the function works only if the matrix is
+    # exactly symmetric (or Hermitian, more in general), otherwise it always gives false.
+    # So, first we check whether σ is reasonably symmetric, at some numerical precision,
+    # then we construct an explicitly symmetric version of it and feed it to `isposdef`.
+    if !isapprox(σ, transpose(σ); kwargs...)
+        println("Not a symmetric matrix.")
         return false
     end
-    if eigmin(σ .+ 0.5im .* Ω(div(n, 2))) < -atol
-        error("does not satisfy uncertainty relation.")
+    if !isposdef(Symmetric(σ))
+        println("Not a positive definite matrix.")
+        return false
+    end
+
+    # Uncertainty relation.
+    # We need to check now whether σ + iΩ is positive semi-definite, so `isposdef` won't
+    # work here since some of its eigenvalues may be zero.
+    # In practice, as usual, instead of zero we'll find something which is slightly zero,
+    # possibly negative, so we can't just use `eigmin(σ + iΩ) ≥ 0` but we must allow
+    # some tolerance. For example, the squeezed state
+    #
+    #   julia> rs = [0.5, 1, 1.5];
+    #   julia> σ = Diagonal(reduce(vcat, [[exp(r); exp(-r)] for r in rs]));
+    #
+    # produces a small negative eigenvalue in this test:
+    #
+    #   julia> eigmin(Hermitian(σ + im * Ω(3)))
+    #   -2.700059754488065e-16
+    #
+    # As before, we make the argument explicitly Hermitian before passing it to `eigmin`
+    # so that it knows that the matrix is Hermitian (since we have already checked that σ
+    # is "reasonably symmetric" we can be sure that σ + iΩ is "reasonably Hermitian") and
+    # its eigenvalues should be real.
+    if eigmin(Hermitian(σ .+ im .* Ω(div(n, 2)))) <
+        -get(kwargs, :atol, eps(eltype(σ)) * norm(σ))
+        println("Does not satisfy the uncertainty relation.")
+        return false
     end
 
     return true
