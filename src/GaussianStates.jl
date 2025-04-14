@@ -4,7 +4,13 @@ using LinearAlgebra
 using MatrixFactorizations: polar
 
 export GaussianState,
-    vacuumstate, nmodes, is_valid_covariance_matrix, thermalstate, randsymplectic, number
+    vacuumstate,
+    nmodes,
+    is_valid_covariance_matrix,
+    thermalstate,
+    randsymplectic,
+    number,
+    purity
 include("states.jl")
 
 export displace,

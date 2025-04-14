@@ -128,6 +128,10 @@ function number(g::GaussianState)
     return 1 / 4 * tr(g.covariance_matrix) + 1 / 2 * norm(g.first_moments)^2 - nmodes(g) / 2
 end
 
+function purity(g::GaussianState)
+    return 1 / sqrt(det(g.covariance_matrix))
+end
+
 function permute_to_xxpp(v::AbstractVector)
     n = div(length(v), 2)
     xxpp = [1:2:(2n); 2:2:(2n)]
