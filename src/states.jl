@@ -185,6 +185,11 @@ function randsymplectic(n)
     m[1:n, (n + 1):(2n)] .= Symmetric(B)
     m[(n + 1):(2n), 1:n] .= Symmetric(C)
     m[(n + 1):(2n), (n + 1):(2n)] .= -transpose(A)
+
+    m /= norm(m)
+    # We divide by the norm otherwise the matrix elements blow up when the dimension gets
+    # big, e.g. randsymplectic(100) would return a matrix whose elements are ~1e28.
+
     return permute_to_xpxp(exp(m))
 end
 
