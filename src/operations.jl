@@ -62,7 +62,10 @@ end
 
 # Phase shift
 
-_2drotationmatrix(θ) = [[cos(θ) -sin(θ)] [sin(θ) cos(θ)]]
+_2drotationmatrix(θ) = [
+    cos(θ) -sin(θ)
+    sin(θ) cos(θ)
+]
 
 """
     phaseshift!(g::GaussianState, ϕ::AbstractVector)
@@ -114,7 +117,10 @@ end
 function _squeezematrix(ζ)
     θ = angle(ζ)
     r = abs(ζ)
-    S = [[cos(θ), sin(θ)] [sin(θ), -cos(θ)]]
+    S = [
+        cos(θ) sin(θ)
+        sin(θ) -cos(θ)
+    ]
     return cosh(r) .* I(2) .- sinh(r) .* S
 end
 
@@ -174,7 +180,10 @@ function squeeze2!(g::GaussianState, ζ, k1, k2)
 
     F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
 
-    S = [[cos(θ), sin(θ)] [sin(θ) -cos(θ)]]
+    S = [
+        cos(θ) sin(θ)
+        sin(θ) -cos(θ)
+    ]
     F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= cosh(r) .* I(2)
     F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= -sinh(r) .* S
     F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= -sinh(r) .* S
