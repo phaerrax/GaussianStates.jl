@@ -197,26 +197,20 @@ function randsymplectic(n)
     return permute_to_xpxp(exp(m))
 end
 
-#=
-This method seems to generate covariance matrices that do not fulfill the uncertainty
-relation σ - i/2 Ω ≥ 0.
-Commented out until I find out what's wrong with it.
-
 """
-    random_gaussianstate(n)
+    randgaussianstate(n)
 
 Generate a random `n`-mode Gaussian state in the xpxp representation.
 """
-function random_gaussianstate(n::Int)
-    sp_evals = randexp(n) .+ 1
-    D = Diagonal(reduce(vcat, [[x, x] for x in sp_evals]))
-    S = random_symplectic(n)
-    σ = permute_to_xpxp(S * D * transpose(S))
-    σ ./= norm(σ)  # keep numbers low
+function randgaussianstate(n)
+    rand_sp_evals = 1 .- log.(rand(n))
+    # -log(x) ~ Exp(1) if x ~ U(0,1)
+    D = Diagonal(permute_to_xpxp([rand_sp_evals; rand_sp_evals]))
+    S = randsymplectic(n)
+    σ = S * D * transpose(S)
     r = 2 .* rand(2n) .- 1  # uniform in [-1,1]
     return GaussianState(r, σ)
 end
-=#
 
 """
     join(g1::GaussianState, g2::GaussianState)

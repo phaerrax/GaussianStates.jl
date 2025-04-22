@@ -1,6 +1,12 @@
 using Test
 using GaussianStates, LinearAlgebra
 
+@testset "Generate valid random state" begin
+    g = randgaussianstate(4)
+    @test is_valid_covariance_matrix(g.covariance_matrix)
+    @test number(g) ≥ 0
+end
+
 @testset verbose = true "Photon number counting" begin
     @testset "coherent state" begin
         n = 2

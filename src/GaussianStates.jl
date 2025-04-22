@@ -9,6 +9,7 @@ export GaussianState,
     is_valid_covariance_matrix,
     thermalstate,
     randsymplectic,
+    randgaussianstate,
     number,
     purity
 include("states.jl")
