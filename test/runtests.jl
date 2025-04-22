@@ -7,6 +7,41 @@ using GaussianStates, LinearAlgebra
     @test number(g) ≥ 0
 end
 
+@testset verbose = true "Purity-preserving Gaussian operations" begin
+    # This is also a way to check that all the Gaussian operation functions run without
+    # errors.
+    N = 4
+    v0 = randgaussianstate(N)
+    @testset "displacement" begin
+        v = displace(v0, rand(ComplexF64, N))
+        displace!(v0, rand(ComplexF64, N))
+        @test purity(v) ≈ purity(v0)
+    end
+    @testset "phase shift" begin
+        v = phaseshift(v0, rand(N))
+        phaseshift!(v0, rand(N))
+        @test purity(v) ≈ purity(v0)
+    end
+    @testset "1-mode squeezing" begin
+        v = squeeze(v0, rand(ComplexF64, N))
+        @test purity(v) ≈ purity(v0)
+    end
+    @testset "2-mode squeezing" begin
+        v = squeeze2(v0, rand(), 1, 3)
+        squeeze2!(v, rand(), 2, 4)
+        squeeze2!(v, rand(), 2, 3)
+        squeeze2!(v, rand(), 1, 4)
+        @test purity(v) ≈ purity(v0)
+    end
+    @testset "beam splitter" begin
+        v = beamsplitter(v0, rand(), 1, 3)
+        beamsplitter!(v, rand(), 2, 4)
+        beamsplitter!(v, rand(), 2, 3)
+        beamsplitter!(v, rand(), 1, 4)
+        @test purity(v) ≈ purity(v0)
+    end
+end
+
 @testset verbose = true "Photon number counting" begin
     @testset "coherent state" begin
         n = 2
