@@ -37,14 +37,14 @@ end
 
 Compute the Williamson decomposition of M, which is assumed to be a `2n × 2n` real
 positive-definite matrix.
-Return a symplectic matrix V, i.e. such that ``V Ω Vᵀ = Ω`` where
+Return `D, V` where `V` is a symplectic matrix, i.e. such that ``V Ω Vᵀ = Ω`` where
 
 ```math
 Ω = Iₙ ⊗  ⎛  0  1 ⎞
             ⎝ -1  0 ⎠
 ```
 
-and a diagonal matrix D of positive numbers such that ``V D Vᵀ = M``.
+and `D` is a diagonal matrix of positive numbers, such that ``V D Vᵀ = M``.
 """
 function williamson(M)
     @assert size(M, 1) == size(M, 2) && iseven(size(M, 1))
