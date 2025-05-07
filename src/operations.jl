@@ -169,25 +169,34 @@ function squeeze(g::GaussianState, ζ, k)
     return squeeze!(h, ζ, k)
 end
 
+function _squeeze2matrix(ζ)
+    θ = angle(ζ)
+    r = abs(ζ)
+
+    F = Matrix{Float64}(cosh(r) * I, 4, 4)
+
+    S = [
+        cos(θ) sin(θ)
+        sin(θ) -cos(θ)
+    ]
+    F[1:2, 3:4] .= -sinh(r) .* S
+    F[3:4, 1:2] .= -sinh(r) .* S
+
+    return F
+end
 """
     squeeze2!(g::GaussianState, ζ, k1, k2)
 
 Apply a two-mode squeezing transformation on modes `k1` and `k2` with parameter `ζ`.
 """
 function squeeze2!(g::GaussianState, ζ, k1, k2)
-    θ = angle(ζ)
-    r = abs(ζ)
+    f = _squeeze2matrix(ζ)
 
     F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
-
-    S = [
-        cos(θ) sin(θ)
-        sin(θ) -cos(θ)
-    ]
-    F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= cosh(r) .* I(2)
-    F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= -sinh(r) .* S
-    F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= -sinh(r) .* S
-    F[(2k2 - 1):(2k2), (2k2 - 1):(2k2)] .= cosh(r) .* I(2)
+    F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= f[1:2, 1:2]
+    F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= f[1:2, 3:4]
+    F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= f[3:4, 1:2]
+    F[(2k2 - 1):(2k2), (2k2 - 1):(2k2)] .= f[3:4, 3:4]
 
     return symplectic_transform!(g, F)
 end
@@ -219,6 +228,13 @@ end
 
 # Beam splitters
 
+function _beamsplittermatrix(η)
+    F = Matrix{Float64}(sqrt(η) * I, 4, 4)
+    F[1:2, 3:4] .= sqrt(1 - η) .* I(2)
+    F[3:4, 1:2] .= -sqrt(1 - η) .* I(2)
+    return F
+end
+
 """
     beamsplitter!(g::GaussianState, transmittivity, k1, k2)
 
@@ -226,12 +242,14 @@ Transform the Gaussian state `g` with a beam splitter on modes `k1` and `k2` wit
 specified `transmittivity`.
 """
 function beamsplitter!(g::GaussianState, transmittivity, k1, k2)
-    η = transmittivity
+    f = _beamsplittermatrix(transmittivity)
+
     F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
-    F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= sqrt(η) .* I(2)
-    F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= sqrt(1 - η) .* I(2)
-    F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= -sqrt(1 - η) .* I(2)
-    F[(2k2 - 1):(2k2), (2k2 - 1):(2k2)] .= sqrt(η) .* I(2)
+    F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= f[1:2, 1:2]
+    F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= f[1:2, 3:4]
+    F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= f[3:4, 1:2]
+    F[(2k2 - 1):(2k2), (2k2 - 1):(2k2)] .= f[3:4, 3:4]
+
     return symplectic_transform!(g, F)
 end
 
