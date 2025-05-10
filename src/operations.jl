@@ -124,10 +124,30 @@ function _squeezematrix(ζ)
     return cosh(r) .* I(2) .- sinh(r) .* S
 end
 
+single_mode_squeezed_vacuum_coefficients = """
+With this definition, the squeezed vacuum state (on a single mode) is written in the
+eigenbasis of the number operator, with ``ζ = r e^(iθ)``, as
+
+```math
+   1     +∞                   √(2n)!
+  ────────  ∑ (e^(iθ) tanh(r))ⁿ ────── |2n⟩
+  √cosh(r) n=0                   2ⁿn!
+```
+"""
+
 """
     squeeze!(g::GaussianState, ζ::AbstractVector)
 
-Transform the Gaussian state `g` by squeezing each mode `k` with parameter `ζ[k]`.
+Transform the Gaussian state `g` by squeezing each mode `k` with parameter `ζ[k]`, by
+applying the operator
+
+```math
+S(ζ) = exp(ζ/2 (a*)^2 - ζ̄/2 a^2)
+```
+
+on each mode.
+
+$single_mode_squeezed_vacuum_coefficients
 """
 function squeeze!(g::GaussianState, ζ::AbstractVector)
     n = nmodes(g)
@@ -142,7 +162,16 @@ end
 """
     squeeze!(g::GaussianState, ζ, k)
 
-Apply a squeezing transformation on the `k`-th mode with parameter `ζ`.
+Apply a squeezing transformation on the `k`-th mode with parameter `ζ`, by applying the
+operator
+
+```math
+S(ζ) = exp(ζ/2 (a*)^2 - ζ̄/2 a^2)
+```
+
+on the selected mode.
+
+$single_mode_squeezed_vacuum_coefficients
 """
 function squeeze!(g::GaussianState, ζ, k)
     F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
@@ -187,7 +216,23 @@ end
 """
     squeeze2!(g::GaussianState, ζ, k1, k2)
 
-Apply a two-mode squeezing transformation on modes `k1` and `k2` with parameter `ζ`.
+Apply a two-mode squeezing transformation on modes `k1` and `k2` with parameter `ζ`, by
+applying the operator
+
+```math
+S₂(ζ) = exp(ζ (a* ⊗ a*) - ζ̄ (a ⊗ a))
+```
+
+on the selected modes.
+
+With this definition, the two-mode squeezed vacuum state is written in the eigenbasis of
+the number operator, with ``ζ = r e^(iθ)``, as
+
+```math
+   1    +∞
+  ───────  ∑ (e^(iθ) tanh(r))ⁿ |n⟩ ⊗ |n⟩
+  cosh(r) n=0
+```
 """
 function squeeze2!(g::GaussianState, ζ, k1, k2)
     f = _squeeze2matrix(ζ)
