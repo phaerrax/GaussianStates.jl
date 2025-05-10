@@ -1,4 +1,40 @@
 """
+    unitary_to_symplectic(M)
+
+Return the symplectic orthogonal ``2n × 2n`` matrix (in the `xxpp` form) associated to the
+``n × n`` unitary matrix `M`.
+"""
+function unitary_to_symplectic(M)
+    if size(M, 1) != size(M, 2)
+        throw(ArgumentError("not a square matrix."))
+    end
+    n = size(M, 1)
+    S = Matrix{Float64}(undef, 2n, 2n)
+    S[1:n, 1:n] = real(M)
+    S[1:n, (n + 1):2n] = -imag(M)
+    S[(n + 1):2n, 1:n] = imag(M)
+    S[(n + 1):2n, (n + 1):2n] = real(M)
+    return S
+end
+
+"""
+    symplectic_to_unitary(M)
+
+Return the ``n × n`` unitary matrix associated to the symplectic orthogonal ``2n × 2n``
+matrix `M` (written in the `xxpp` form).
+"""
+function symplectic_to_unitary(M)
+    if size(M, 1) != size(M, 2)
+        throw(ArgumentError("not a square matrix."))
+    end
+    if isodd(size(M, 1))
+        throw(ArgumentError("not an even-sized matrix."))
+    end
+    n = div(size(M, 1), 2)
+    return complex.(M[1:n, 1:n], M[(n + 1):2n, 1:n])
+end
+
+"""
     randposdef(n)
 
 Generate an ``n × n`` real positive-definite matrix.

@@ -101,3 +101,14 @@ end
 @testset "Euler decomposition" begin
     @test euler_check(8)
 end
+
+@testset "Unitary-to-symplectic conversion" begin
+    n = 9
+    h = Hermitian(rand(n, n))
+    U = cis(h)  # = exp(im * h)
+    @assert U' * U ≈ U * U' ≈ I
+
+    S = GaussianStates.unitary_to_symplectic(U)
+    @test issymplectic(GaussianStates.permute_to_xpxp(S))
+    @test U == GaussianStates.symplectic_to_unitary(S)
+end
