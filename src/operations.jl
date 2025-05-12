@@ -121,7 +121,7 @@ function _squeezematrix(ζ)
         cos(θ) sin(θ)
         sin(θ) -cos(θ)
     ]
-    return cosh(r) .* I(2) .- sinh(r) .* S
+    return cosh(r) .* I(2) .+ sinh(r) .* S
 end
 
 single_mode_squeezed_vacuum_coefficients = """
@@ -208,8 +208,8 @@ function _squeeze2matrix(ζ)
         cos(θ) sin(θ)
         sin(θ) -cos(θ)
     ]
-    F[1:2, 3:4] .= -sinh(r) .* S
-    F[3:4, 1:2] .= -sinh(r) .* S
+    F[1:2, 3:4] .= sinh(r) .* S
+    F[3:4, 1:2] .= sinh(r) .* S
 
     return F
 end
