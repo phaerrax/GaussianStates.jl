@@ -1,4 +1,21 @@
 """
+    promote_array(arrays...)
+
+Return `arrays` with their element types promoted to their join.
+
+# Example
+
+```julia-repl
+julia> promote_array(big.([1.0, 2]), zeros(Int, 2, 2))
+(BigFloat[1.0, 2.0], BigFloat[0.0 0.0; 0.0 0.0])
+```
+"""
+function promote_array(arrays...)
+    supertype = Base.promote_eltype(arrays...)
+    tuple([convert(Array{supertype}, array) for array in arrays]...)
+end
+
+"""
     Ω(n)
 
 Return the ``2n × 2n`` symplectic matrix
@@ -100,18 +117,22 @@ struct GaussianState
     function GaussianState(r, σ)
         @assert all(size(σ) .== size(r))
         @assert iseven(size(σ, 1))
-        return new(r, σ)
+        return new(promote_array(r, σ)...)
     end
 end
 
+Base.eltype(g::GaussianState) = eltype(g.first_moments)
 nmodes(g::GaussianState) = div(length(g.first_moments), 2)
 
 """
-    vacuumstate(n)
+    vacuumstate([T = Float64, ]n)
 
-Return the vacuum state on `n` modes.
+Return the vacuum Gaussian state of type `T` on `n` modes
 """
-vacuumstate(n) = GaussianState(zeros(2n), Matrix{Float64}(I, 2n, 2n))
+function vacuumstate(::Type{T}, n) where {T<:Number}
+    GaussianState(zeros(T, 2n), Matrix{T}(I, 2n, 2n))
+end
+vacuumstate(n) = vacuumstate(Float64, n)
 
 """
     thermalstate(n, β, ω::AbstractVector)
@@ -125,11 +146,11 @@ function thermalstate(n, β, ω::AbstractVector)
 end
 
 function number(g::GaussianState)
-    return 1 / 4 * tr(g.covariance_matrix) + 1 / 2 * norm(g.first_moments)^2 - nmodes(g) / 2
+    return tr(g.covariance_matrix) / 4 + (norm(g.first_moments)^2) / 2 - nmodes(g) / 2
 end
 
 function purity(g::GaussianState)
-    return 1 / sqrt(det(g.covariance_matrix))
+    return inv(sqrt(det(g.covariance_matrix)))
 end
 
 function permute_to_xxpp(v::AbstractVector)
@@ -171,20 +192,21 @@ function permute_to_xpxp(m::AbstractMatrix)
 end
 
 """
-	randsymplectic(n)
+    randsymplectic([T = Float64, ]n)
 
-Generate a random ``2n × 2n`` real symplectic matrix such that ``S Ω Sᵀ = Ω`` with
+Generate a random ``2n × 2n`` real symplectic matrix of element type `T` such that
+``S Ω Sᵀ = Ω``, with
 
 ```
 Ω = Iₙ ⊗  ⎛  0  1 ⎞
             ⎝ -1  0 ⎠
 ```
 """
-function randsymplectic(n)
+function randsymplectic(::Type{T}, n) where {T<:Number}
     A = rand(n, n)
     B = rand(n, n)
     C = rand(n, n)
-    m = Matrix{Float64}(undef, 2n, 2n)
+    m = Matrix{T}(undef, 2n, 2n)
     m[1:n, 1:n] .= A
     m[1:n, (n + 1):(2n)] .= Symmetric(B)
     m[(n + 1):(2n), 1:n] .= Symmetric(C)
@@ -197,35 +219,44 @@ function randsymplectic(n)
     return permute_to_xpxp(exp(m))
 end
 
-"""
-    randgaussianstate(n, λ; pure=false, displace=true)
+randsymplectic(n) = randsymplectic(Float64, n)
 
-Generate a random `n`-mode Gaussian state in the xpxp representation.
+"""
+    randgaussianstate([T = Float64, ]n, λ; pure=false, displace=true)
+
+Generate a random `n`-mode Gaussian state with element type `T`, in the xpxp representation.
 
 The state is generated from the Williamson decomposition, by drawing first the `n`
 symplectic eigenvalues ``d_i`` and then applying a random symplectic transformation.
 Each ``d_i`` is drawn from an exponential distribution with rate `λ[i]`, which defaults to
-one.
+one (`λ`'s elements must be convertible to `T`).
 If `displace` is `true` then a random displacement in ``[-1, 1]`` is applied on each mode.
 The returned state is generally not pure, unless `pure` is `false` which forces the
 generation of a pure state.
 """
-function randgaussianstate(n, λ=ones(n); pure=false, displace=true)
-    rand_sp_evals = 1 .- log.(rand(n)) ./ λ
+function randgaussianstate(
+    ::Type{T}, n, λ=ones(T, n); pure=false, displace=true
+) where {T<:Number}
+    λ = convert.(T, λ)
+    rand_sp_evals = one(T) .- log.(rand(T, n)) ./ λ
     # -log(x)/λ ~ Exp(λ) if x ~ U(0,1)
     D = Diagonal(permute_to_xpxp([rand_sp_evals; rand_sp_evals]))
-    S = randsymplectic(n)
+    S = randsymplectic(T, n)
     σ = if pure
         S * transpose(S)
     else
         S * D * transpose(S)
     end
     r = if displace
-        2 .* rand(2n) .- 1  # uniform in [-1,1]
+        2 .* rand(T, 2n) .- one(T)  # uniform in [-1,1]
     else
-        zeros(2n)
+        zeros(T, 2n)
     end
     return GaussianState(r, σ)
+end
+
+function randgaussianstate(n, λ=ones(n); pure=false, displace=true)
+    randgaussianstate(Float64, n, λ; pure=pure, displace=displace)
 end
 
 """
