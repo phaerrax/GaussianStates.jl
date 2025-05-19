@@ -8,13 +8,10 @@ function unitary_to_symplectic(M)
     if size(M, 1) != size(M, 2)
         throw(ArgumentError("not a square matrix."))
     end
-    n = size(M, 1)
-    S = Matrix{Float64}(undef, 2n, 2n)
-    S[1:n, 1:n] = real(M)
-    S[1:n, (n + 1):2n] = -imag(M)
-    S[(n + 1):2n, 1:n] = imag(M)
-    S[(n + 1):2n, (n + 1):2n] = real(M)
-    return S
+    return [
+        real(M) -imag(M)
+        imag(M) real(M)
+    ]
 end
 
 """
@@ -35,18 +32,20 @@ function symplectic_to_unitary(M)
 end
 
 """
-    randposdef(n)
+    randposdef([T = Float64, ]n)
 
-Generate an ``n × n`` real positive-definite matrix.
+Generate an ``n × n`` real positive-definite matrix with element type `T`.
 """
-function randposdef(n)
-    A = rand(n, n)
+function randposdef(::Type{T}, n) where {T<:Number}
+    A = rand(T, n, n)
     hermitianpart!(A)  # overwrite with 1/2 (A + A')
 
     # Since a symmetric diagonally dominant matrix is symmetric positive-definite and we
     # have A[i, j] < 1 by construction, we can ensure positive-definiteness by adding nI.
-    return A .+ n * I(n)
+    return A .+ n * Matrix{T}(I, n, n)
 end
+
+randposdef(n) = randposdef(Float64, n)
 
 """
     issymplectic(M)
@@ -152,13 +151,18 @@ function takagiautonne(A::AbstractMatrix{<:Real}; svd_order=true)
 
     eigenvalues, U = eigen(A)
     d = abs.(eigenvalues)
-    phases = Diagonal([v < 0 ? im : 1 for v in eigenvalues])
+    phases = Diagonal([
+        v < 0 ? complex(zero(v), one(v)) : complex(one(v), zero(v)) for v in eigenvalues
+    ])
+    # `complex(zero(v), one(v))` is the imaginary unit of the same type as `v`, while
+    # `complex(one(v), zero(v))` is the unit, we're just anticipating the conversion to the
+    # complex type.
     Uc = U * phases
     p = sortperm(d; rev=svd_order)
     return Diagonal(d[p]), Uc[:, p]
 end
 
-function takagiautonne(A::Diagonal{T}; svd_order=true) where {T}
+function takagiautonne(A::Diagonal{T}; svd_order=true) where {T<:Number}
     phases = cis(Diagonal(angle.(diag(A))) / 2)
     # Since by construction phases is symmetric and
     #   A = phases^2 * D = phases * d * phases
@@ -227,13 +231,8 @@ and `D` is a diagonal matrix which can be written as
 with ``dⱼ ≥ 1``.
 """
 function euler(M)
-    n = div(size(M, 1), 2)
-    xxpp = [1:2:(2n); 2:2:(2n)]
-    xpxp = invperm(xxpp)
-    L, D, R = _euler_xxpp(M[xxpp, xxpp])
-    @assert L * D * R ≈ M[xxpp, xxpp]
-
-    return L[xpxp, xpxp], D[xpxp, xpxp], R[xpxp, xpxp]
+    L, D, R = _euler_xxpp(permute_to_xxpp(M))
+    return permute_to_xpxp(L), permute_to_xpxp(D), permute_to_xpxp(R)
 end
 
 function _euler_xxpp(M)
@@ -248,13 +247,13 @@ function _euler_xxpp(M)
 
     U, P = polar(M)  # U * P ≈ M with U unitary and P ≥ 0 (both of the same size as M)
     A =
-        1 / 2 .* (
-            P[1:n, 1:n] .- P[(n + 1):(2n), (n + 1):(2n)] .+
-            im .* (P[1:n, (n + 1):(2n)] .+ P[(n + 1):(2n), 1:n])
-        )
+        complex.(
+            P[1:n, 1:n] .- P[(n + 1):(2n), (n + 1):(2n)],
+            P[1:n, (n + 1):(2n)] .+ P[(n + 1):(2n), 1:n],
+        ) ./ 2
     Σ, W = takagiautonne(A)  # A ≈ W Σ Wᵀ
 
-    Q = [real(W) -imag(W); imag(W) real(W)]
+    Q = unitary_to_symplectic(W)
 
     Γ = Σ + sqrt(I + Σ^2)  # No need to broadcast here, everything is a Diagonal object
     D = Diagonal(M)  # We just need a 2n×2n Diagonal matrix, we'll overwrite the contents
