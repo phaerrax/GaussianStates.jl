@@ -1,7 +1,4 @@
-function williamson_check(n)
-    # Generate a random positive-definite matrix A
-    A = randposdef(2n)
-
+function williamson_check(A)
     # Check that actually A > 0
     if !isposdef(A)
         return false
@@ -46,9 +43,8 @@ function takagiautonne_check(A)
     return A ≈ W * D * transpose(W)
 end
 
-function euler_check(n)
-    s = randsymplectic(n)
-    l, d, r = euler(s)
+function euler_check(A)
+    l, d, r = euler(A)
 
     if !(issymplectic(l) && l * l' ≈ I && l' * l ≈ I)
         println("L matrix not symplectic or orthogonal")
@@ -59,5 +55,5 @@ function euler_check(n)
         return false
     end
 
-    return l * d * r ≈ s
+    return l * d * r ≈ A
 end

@@ -1,5 +1,8 @@
 using Test
-using GaussianStates, LinearAlgebra
+using GaussianStates, LinearAlgebra, GenericLinearAlgebra
+using ExponentialUtilities: ExponentialUtilities
+
+LinearAlgebra.exp!(A::Matrix{BigFloat}) = ExponentialUtilities.exponential!(A)
 
 @testset "Random state generation" begin
     g = randgaussianstate(4)
@@ -85,14 +88,19 @@ end
 
 include("decompositions.jl")
 @testset "Williamson decomposition" begin
-    @test williamson_check(8)
+    n = 8
+    A = randposdef(Float64, 2n)
+    @test williamson_check(Symmetric(A))
+
+    A = randposdef(BigFloat, 2n)
+    @test williamson_check(Symmetric(A))
 end
 
 @testset verbose = true "Takagi-Autonne decomposition" begin
     n = 8
     @testset "with a real matrix" begin
         a = rand(n, n)
-        a = (a + transpose(a)) / 2
+        a = (a+transpose(a))/2
         @test takagiautonne_check(a)
     end
     @testset "with an almost diagonal matrix" begin
@@ -103,18 +111,28 @@ end
     end
     @testset "with a real matrix times a phase" begin
         a = rand(n, n)
-        a = cispi(rand()) .* (a + transpose(a)) / 2
+        a = cispi(rand()) .* (a+transpose(a))/2
         @test takagiautonne_check(a)
     end
     @testset "with a non-real matrix" begin
         a = rand(ComplexF64, n, n)
-        a = (a + transpose(a)) / 2
+        a = (a+transpose(a))/2
+        @test takagiautonne_check(a)
+    end
+    @testset "with a BigFloat matrix" begin
+        a = big.(rand(ComplexF64, n, n))
+        a = (a+transpose(a))/2
         @test takagiautonne_check(a)
     end
 end
 
 @testset "Euler decomposition" begin
-    @test euler_check(8)
+    n = 8
+    A = randsymplectic(Float64, n)
+    @test euler_check(A)
+
+    A = randsymplectic(BigFloat, n)
+    @test euler_check(A)
 end
 
 @testset "Unitary-to-symplectic conversion" begin
