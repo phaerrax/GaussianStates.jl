@@ -1,9 +1,24 @@
 using Test
 using GaussianStates, LinearAlgebra
 
-@testset "Generate valid random state" begin
+@testset "Random state generation" begin
     g = randgaussianstate(4)
     @test is_valid_covariance_matrix(g.covariance_matrix)
+    @test number(g) ≥ 0
+
+    g = randgaussianstate(4, rand(4))
+    @test is_valid_covariance_matrix(g.covariance_matrix)
+    @test number(g) ≥ 0
+
+    g = randgaussianstate(4; pure=true)
+    @test is_valid_covariance_matrix(g.covariance_matrix)
+    @test purity(g) ≈ 1
+    @test number(g) ≥ 0
+
+    g = randgaussianstate(4; pure=true, displace=false)
+    @test is_valid_covariance_matrix(g.covariance_matrix)
+    @test iszero(g.first_moments)
+    @test purity(g) ≈ 1
     @test number(g) ≥ 0
 end
 

@@ -198,17 +198,33 @@ function randsymplectic(n)
 end
 
 """
-    randgaussianstate(n)
+    randgaussianstate(n, λ; pure=false, displace=true)
 
 Generate a random `n`-mode Gaussian state in the xpxp representation.
+
+The state is generated from the Williamson decomposition, by drawing first the `n`
+symplectic eigenvalues ``d_i`` and then applying a random symplectic transformation.
+Each ``d_i`` is drawn from an exponential distribution with rate `λ[i]`, which defaults to
+one.
+If `displace` is `true` then a random displacement in ``[-1, 1]`` is applied on each mode.
+The returned state is generally not pure, unless `pure` is `false` which forces the
+generation of a pure state.
 """
-function randgaussianstate(n)
-    rand_sp_evals = 1 .- log.(rand(n))
-    # -log(x) ~ Exp(1) if x ~ U(0,1)
+function randgaussianstate(n, λ=ones(n); pure=false, displace=true)
+    rand_sp_evals = 1 .- log.(rand(n)) ./ λ
+    # -log(x)/λ ~ Exp(λ) if x ~ U(0,1)
     D = Diagonal(permute_to_xpxp([rand_sp_evals; rand_sp_evals]))
     S = randsymplectic(n)
-    σ = S * D * transpose(S)
-    r = 2 .* rand(2n) .- 1  # uniform in [-1,1]
+    σ = if pure
+        S * transpose(S)
+    else
+        S * D * transpose(S)
+    end
+    r = if displace
+        2 .* rand(2n) .- 1  # uniform in [-1,1]
+    else
+        zeros(2n)
+    end
     return GaussianState(r, σ)
 end
 
