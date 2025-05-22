@@ -281,10 +281,16 @@ function _beamsplittermatrix(η)
 end
 
 """
-    beamsplitter!(g::GaussianState, transmittivity, k1, k2)
+    beamsplitter!(g::GaussianState, η, k1, k2)
 
-Transform the Gaussian state `g` with a beam splitter on modes `k1` and `k2` with the
-specified `transmittivity`.
+Transform the Gaussian state `g` with a beam splitter on modes `k1` and `k2` with
+transmittivity `η`, represented by the operator
+
+```math
+B(θ) = exp(θ(a ⊗ a* - a* ⊗ a))
+```
+
+with ``η = cos θ``.
 """
 function beamsplitter!(g::GaussianState, transmittivity, k1, k2)
     f = _beamsplittermatrix(transmittivity)
