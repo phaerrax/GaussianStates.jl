@@ -35,7 +35,7 @@ Transform the Gaussian state `g` by applying the displacement operator on the `k
 with parameter `α`.
 """
 function displace!(g::GaussianState, α, k)
-    d = zeros(2nmodes(g))
+    d = zeros(eltype(g), 2nmodes(g))
     d[2k - 1] = sqrt(2) * real(α)
     d[2k] = sqrt(2) * imag(α)
     return symplectic_transform!(g, d)
@@ -74,7 +74,7 @@ Transform the Gaussian state `g` by applying to each mode `k` a phase shift `ϕ[
 """
 function phaseshift!(g::GaussianState, ϕ::AbstractVector)
     n = nmodes(g)
-    F = zeros(2n, 2n)
+    F = zeros(eltype(g), 2n, 2n)
     for k in 1:n
         i = 2k - 1
         F[i:(i + 1), i:(i + 1)] .= _2drotationmatrix(ϕ[k])
@@ -88,7 +88,8 @@ end
 Transform the Gaussian state `g` by applying to each mode `k` a phase shift `ϕ[k]`.
 """
 function phaseshift!(g::GaussianState, ϕ, k)
-    F = float.(I(2nmodes(g)))
+    n = nmodes(g)
+    F = Matrix{eltype(g)}(I, 2n, 2n)
     F[(2k - 1):(2k), (2k - 1):(2k)] .= _2drotationmatrix(ϕ)
     return symplectic_transform!(g, F)
 end
@@ -174,7 +175,7 @@ on the selected mode.
 $single_mode_squeezed_vacuum_coefficients
 """
 function squeeze!(g::GaussianState, ζ, k)
-    F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
+    F = Matrix{eltype(g)}(I, 2nmodes(g), 2nmodes(g))
     F[(2k - 1):(2k), (2k - 1):(2k)] .= _squeezematrix(ζ)
     return symplectic_transform!(g, F)
 end
@@ -198,11 +199,11 @@ function squeeze(g::GaussianState, ζ, k)
     return squeeze!(h, ζ, k)
 end
 
-function _squeeze2matrix(ζ)
+function _squeeze2matrix(::Type{T}, ζ) where {T<:Number}
     θ = angle(ζ)
     r = abs(ζ)
 
-    F = Matrix{Float64}(cosh(r) * I, 4, 4)
+    F = Matrix{T}(cosh(r) * I, 4, 4)
 
     S = [
         cos(θ) sin(θ)
@@ -235,9 +236,9 @@ the number operator, with ``ζ = r e^(iθ)``, as
 ```
 """
 function squeeze2!(g::GaussianState, ζ, k1, k2)
-    f = _squeeze2matrix(ζ)
+    f = _squeeze2matrix(eltype(g), ζ)
 
-    F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
+    F = Matrix{eltype(g)}(I, 2nmodes(g), 2nmodes(g))
     F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= f[1:2, 1:2]
     F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= f[1:2, 3:4]
     F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= f[3:4, 1:2]
@@ -273,8 +274,8 @@ end
 
 # Beam splitters
 
-function _beamsplittermatrix(η)
-    F = Matrix{Float64}(sqrt(η) * I, 4, 4)
+function _beamsplittermatrix(::Type{T}, η) where {T<:Number}
+    F = Matrix{T}(sqrt(η) * I, 4, 4)
     F[1:2, 3:4] .= sqrt(1 - η) .* I(2)
     F[3:4, 1:2] .= -sqrt(1 - η) .* I(2)
     return F
@@ -293,9 +294,9 @@ B(θ) = exp(θ(a ⊗ a* - a* ⊗ a))
 with ``η = cos θ``.
 """
 function beamsplitter!(g::GaussianState, transmittivity, k1, k2)
-    f = _beamsplittermatrix(transmittivity)
+    f = _beamsplittermatrix(eltype(g), transmittivity)
 
-    F = Matrix{Float64}(I, 2nmodes(g), 2nmodes(g))
+    F = Matrix{eltype(g)}(I, 2nmodes(g), 2nmodes(g))
     F[(2k1 - 1):(2k1), (2k1 - 1):(2k1)] .= f[1:2, 1:2]
     F[(2k1 - 1):(2k1), (2k2 - 1):(2k2)] .= f[1:2, 3:4]
     F[(2k2 - 1):(2k2), (2k1 - 1):(2k1)] .= f[3:4, 1:2]
