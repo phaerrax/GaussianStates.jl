@@ -237,14 +237,14 @@ generation of a pure state.
 function randgaussianstate(
     ::Type{T}, n, λ=ones(T, n); pure=false, displace=true
 ) where {T<:Number}
-    λ = convert.(T, λ)
-    rand_sp_evals = one(T) .- log.(rand(T, n)) ./ λ
-    # -log(x)/λ ~ Exp(λ) if x ~ U(0,1)
-    D = Diagonal(permute_to_xpxp([rand_sp_evals; rand_sp_evals]))
     S = randsymplectic(T, n)
     σ = if pure
         S * transpose(S)
     else
+        λ = convert.(T, λ)
+        rand_sp_evals = one(T) .- log.(rand(T, n)) ./ λ
+        # -log(x)/λ ~ Exp(λ) if x ~ U(0,1)
+        D = Diagonal(permute_to_xpxp([rand_sp_evals; rand_sp_evals]))
         S * D * transpose(S)
     end
     r = if displace
