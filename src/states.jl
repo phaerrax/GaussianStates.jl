@@ -124,6 +124,14 @@ end
 Base.eltype(g::GaussianState) = eltype(g.first_moments)
 nmodes(g::GaussianState) = div(length(g.first_moments), 2)
 
+function Base.:(==)(g::GaussianState, h::GaussianState)
+    (g.first_moments == h.first_moments) && (g.covariance_matrix == h.covariance_matrix)
+end
+function Base.isapprox(g::GaussianState, h::GaussianState; kwargs...)
+    isapprox(g.first_moments, h.first_moments; kwargs...) &&
+    isapprox(g.covariance_matrix, h.covariance_matrix; kwargs...)
+end
+
 """
     vacuumstate([T = Float64, ]n)
 
