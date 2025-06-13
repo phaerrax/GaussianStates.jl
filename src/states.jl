@@ -108,8 +108,10 @@ end
     GaussianState
 
 Represent a Gaussian state by storing only its covariance matrix and the vector of its
-first moments.
-By default states are stored in the xpxp representation.
+first moments.  By default states are stored in the xpxp representation.
+
+A `GaussianState` object can be constructed by specifying first moments and covariance
+matrix as `GaussianState(r, σ)` or just the covariance matrix as `GaussianState(σ)`.
 """
 struct GaussianState
     first_moments::AbstractVector
@@ -120,6 +122,8 @@ struct GaussianState
         return new(promote_array(r, σ)...)
     end
 end
+
+GaussianState(σ::AbstractMatrix) = GaussianState(zeros(size(σ, 1)), σ)
 
 Base.eltype(g::GaussianState) = eltype(g.first_moments)
 nmodes(g::GaussianState) = div(length(g.first_moments), 2)

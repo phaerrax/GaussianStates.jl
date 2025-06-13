@@ -4,6 +4,18 @@ using ExponentialUtilities: ExponentialUtilities
 
 LinearAlgebra.exp!(A::Matrix{BigFloat}) = ExponentialUtilities.exponential!(A)
 
+@testset "GaussianState constructors" begin
+    N = 4
+    r = rand(2N)
+    σ = Symmetric(rand(2N, 2N))
+    @test nmodes(GaussianState(r, σ)) == N
+    @test GaussianState(σ) == GaussianState(zeros(2N), σ)
+
+    @test GaussianState(r, σ) ≈ GaussianState(
+        r .+ eps(eltype(r)) .* rand(length(r)), σ .+ eps(eltype(σ)) .* rand(size(σ)...)
+    )
+end
+
 @testset "Random state generation" begin
     g = randgaussianstate(4)
     @test is_valid_covariance_matrix(g.covariance_matrix)
