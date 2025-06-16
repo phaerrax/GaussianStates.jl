@@ -1,3 +1,5 @@
+dirsum(A, B) = [A zeros(size(A, 1), size(B, 2)); zeros(size(B, 1), size(A, 2)) B]
+
 """
     unitary_to_symplectic(M)
 
@@ -236,6 +238,8 @@ function euler(M)
 end
 
 function _euler_xxpp(M)
+    # Source: github.com/sss441803/BosonSupremacy/blob/boson_sampling/MPS_cpu.py#L189
+
     # Here M is assumed to be symplectic with respect to the matrix
     #
     #   ⎛  0   Iₙ ⎞
@@ -245,24 +249,54 @@ function _euler_xxpp(M)
     @assert size(M, 1) == size(M, 2) && iseven(size(M, 1))
     n = div(size(M, 1), 2)
 
-    U, P = polar(M)  # U * P ≈ M with U unitary and P ≥ 0 (both of the same size as M)
-    A =
-        complex.(
-            P[1:n, 1:n] .- P[(n + 1):(2n), (n + 1):(2n)],
-            P[1:n, (n + 1):(2n)] .+ P[(n + 1):(2n), 1:n],
-        ) ./ 2
-    Σ, W = takagiautonne(A)  # A ≈ W Σ Wᵀ
+    C = 1/sqrt(2) * [
+        I(n) im*I(n)
+        I(n) -im*I(n)
+    ]
+    # This is the matrix that describes the passage from canonical to annihilation and
+    # creation operators: for any symplectic orthogonal matrix M written as
+    #
+    #   ⎛  X  Y ⎞
+    #   ⎝ -Y  X ⎠
+    #
+    # we obtain C M C* =
+    #
+    #   ⎛ 1/√2 I   i/√2 I ⎞ ⎛ X  -Y ⎞ ⎛ 1/√2 I   i/√2 I ⎞*    ⎛ X+iY    0  ⎞
+    #   ⎝ 1/√2 I  -i/√2 I ⎠ ⎝ Y   X ⎠ ⎝ 1/√2 I  -i/√2 I ⎠   = ⎝   0   X-iY ⎠
+    #
+    # (here though we apply this transformation to M which may not be orthogonal).
+    Mc = C * M * C'
 
-    Q = unitary_to_symplectic(W)
+    # Polar decomposition C M C' = P W, with P ≥ 0 and W unitary
+    Uₛ, Dₛ, Vₛ = svd(Mc)
+    P = Uₛ * Diagonal(Dₛ) * Uₛ'
+    W = Uₛ * Vₛ'
+    @assert P * W ≈ Mc
+    @assert W * W' ≈ I
 
-    Γ = Σ + sqrt(I + Σ^2)  # No need to broadcast here, everything is a Diagonal object
-    D = Diagonal(M)  # We just need a 2n×2n Diagonal matrix, we'll overwrite the contents
-    D[1:n, 1:n] .= Γ
-    D[(n + 1):(2n), (n + 1):(2n)] .= Γ - 2Σ  # == inv(Γ)
+    α = W[1:n, 1:n]
+    β = P[1:n, (n + 1):end]
+    Uᵦ, Dᵦ, Vᵦ = svd(β)
+    Dᵦ = Diagonal(Dᵦ)
 
-    L = U * Q
-    R = Q'
-    return L, D, R
+    B = Uᵦ * sqrt(Uᵦ' * conj(Vᵦ))
+    uf = dirsum(B, conj(B))
+    vf = dirsum(B' * α, conj(B' * α))
+
+    df = [
+        sqrt(I + Dᵦ^2) Dᵦ
+        Dᵦ sqrt(I+Dᵦ^2)
+    ]
+
+    L = C' * uf * C
+    D = C' * df * C
+    R = C' * vf * C
+
+    if !isapprox(L, real(L)) || !isapprox(D, real(D)) || !isapprox(R, real(R))
+        error("products of the Euler decomposition are not real")
+    else
+        return real(L), real(D), real(R)
+    end
     # These matrices satisfy L D R = M, but they are symplectic with respect to
     #
     #   ⎛  0   Iₙ ⎞

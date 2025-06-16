@@ -133,7 +133,7 @@ function Base.:(==)(g::GaussianState, h::GaussianState)
 end
 function Base.isapprox(g::GaussianState, h::GaussianState; kwargs...)
     isapprox(g.first_moments, h.first_moments; kwargs...) &&
-    isapprox(g.covariance_matrix, h.covariance_matrix; kwargs...)
+        isapprox(g.covariance_matrix, h.covariance_matrix; kwargs...)
 end
 
 """

@@ -1,7 +1,6 @@
 module GaussianStates
 
 using LinearAlgebra
-using MatrixFactorizations: polar
 
 export GaussianState,
     vacuumstate,

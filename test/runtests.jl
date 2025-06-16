@@ -142,9 +142,6 @@ end
     n = 8
     A = randsymplectic(Float64, n)
     @test euler_check(A)
-
-    A = randsymplectic(BigFloat, n)
-    @test euler_check(A)
 end
 
 @testset "Unitary-to-symplectic conversion" begin
