@@ -43,17 +43,36 @@ function takagiautonne_check(A)
     return A ≈ W * D * transpose(W)
 end
 
-function euler_check(A)
-    l, d, r = euler(A)
+function euler_check(M)
+    L, D, R = euler(M)
 
-    if !(issymplectic(l) && l * l' ≈ I && l' * l ≈ I)
-        println("L matrix not symplectic or orthogonal")
+    if !isapprox(L * L', I)
+        println("left matrix is not orthogonal")
         return false
     end
-    if !(issymplectic(r) && r * r' ≈ I && r' * r ≈ I)
-        println("R matrix not symplectic or orthogonal")
+    if !isapprox(R * R', I)
+        println("right matrix is not orthogonal")
         return false
     end
 
-    return l * d * r ≈ A
+    if !issymplectic(L)
+        println("left matrix is not symplectic")
+        return false
+    end
+    if !issymplectic(R)
+        println("right matrix is not symplectic")
+        return false
+    end
+
+    if any(≤(0), diag(D))
+        println("not all singular values are positive")
+        return false
+    end
+
+    if !isapprox(D[1:2:end, 1:2:end] * D[2:2:end, 2:2:end], I)
+        println("singular values matrix does not have the correct structure D ⊕ D⁻¹")
+        return false
+    end
+
+    return L * D * R ≈ M
 end
