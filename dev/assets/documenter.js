@@ -73,8 +73,7 @@ MathJax.Hub.Config({
         "\\mathbb{R}"
       ],
       "sympmat": [
-        "\\\\varOmega",
-        1
+        "\\varOmega"
       ],
       "det": [
         "\\operatorname{det}"
