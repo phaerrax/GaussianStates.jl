@@ -127,12 +127,16 @@ end
 
 single_mode_squeezed_vacuum_coefficients = """
 With this definition, the squeezed vacuum state (on a single mode) is written in the
-eigenbasis of the number operator, with ``ζ = r e^(iθ)``, as
+eigenbasis of the number operator, with ``ζ = r e^{iθ}``, as
 
 ```math
-   1     +∞                   √(2n)!
-  ────────  ∑ (e^(iθ) tanh(r))ⁿ ────── |2n⟩
-  √cosh(r) n=0                   2ⁿn!
+\\frac{1}{\\sqrt{\\cosh r}} \\sum_{n=0}^{+∞} (e^{iθ} \\tanh r)^n \\frac{\\sqrt{(2n)!}}{2^n n!} |2n⟩
+```
+"""
+
+squeeze_operator_latex = """
+```math
+S(ζ) = \\exp\\bigl(\\tfrac12 ζ {\\adj{a}}^2 - \\tfrac12\\conj{ζ} a^2\\bigr)
 ```
 """
 
@@ -142,9 +146,7 @@ eigenbasis of the number operator, with ``ζ = r e^(iθ)``, as
 Transform the Gaussian state `g` by squeezing each mode `k` with parameter `ζ[k]`, by
 applying the operator
 
-```math
-S(ζ) = exp(ζ/2 (a*)^2 - ζ̄/2 a^2)
-```
+$squeeze_operator_latex
 
 on each mode.
 
@@ -166,9 +168,7 @@ end
 Apply a squeezing transformation on the `k`-th mode with parameter `ζ`, by applying the
 operator
 
-```math
-S(ζ) = exp(ζ/2 (a*)^2 - ζ̄/2 a^2)
-```
+$squeeze_operator_latex
 
 on the selected mode.
 
@@ -221,18 +221,16 @@ Apply a two-mode squeezing transformation on modes `k1` and `k2` with parameter 
 applying the operator
 
 ```math
-S₂(ζ) = exp(ζ (a* ⊗ a*) - ζ̄ (a ⊗ a))
+S_2(ζ) = \\exp\\bigl(ζ (\\adj{a} ⊗ \\adj{a}) - \\conj{ζ} (a ⊗ a)\\bigr)
 ```
 
 on the selected modes.
 
 With this definition, the two-mode squeezed vacuum state is written in the eigenbasis of
-the number operator, with ``ζ = r e^(iθ)``, as
+the number operator, with ``ζ = r e^{iθ}``, as
 
 ```math
-   1    +∞
-  ───────  ∑ (e^(iθ) tanh(r))ⁿ |n⟩ ⊗ |n⟩
-  cosh(r) n=0
+\\frac{1}{\\cosh r} \\sum_{n=0}^{+∞} (e^{iθ} \\tanh r)^n |n⟩ ⊗ |n⟩
 ```
 """
 function squeeze2!(g::GaussianState, ζ, k1, k2)
@@ -288,10 +286,10 @@ Transform the Gaussian state `g` with a beam splitter on modes `k1` and `k2` wit
 transmittivity `η`, represented by the operator
 
 ```math
-B(θ) = exp(θ(a ⊗ a* - a* ⊗ a))
+B(θ) = \\exp\\bigl(θ (a ⊗ \\adj{a} - \\adj{a} ⊗ a)\\bigr)
 ```
 
-with ``η = cos θ``.
+with ``η = \\cos θ``.
 """
 function beamsplitter!(g::GaussianState, transmittivity, k1, k2)
     f = _beamsplittermatrix(eltype(g), transmittivity)

@@ -52,12 +52,10 @@ randposdef(n) = randposdef(Float64, n)
 """
     issymplectic(M)
 
-Check whether `M` is a symplectic matrix, i.e. if ``M Ω Mᵀ = Ω`` where
+Check whether `M` is a symplectic matrix, i.e. if ``M \\sympmat \\transpose{M} =
+\\sympmat`` where
 
-```math
-Ω = Iₙ ⊗  ⎛  0  1 ⎞
-            ⎝ -1  0 ⎠
-```
+$symplectic_matrix_latex
 """
 function issymplectic(M)
     # We could check that
@@ -66,22 +64,20 @@ function issymplectic(M)
     # mismatching shapes of the matrices anyway.
 
     n = div(size(M, 1), 2)
-    return M * Ω(n) * transpose(M) ≈ Ω(n)
+    return M * _symplectic_matrix(n) * transpose(M) ≈ _symplectic_matrix(n)
 end
 
 """
     williamson(M)
 
-Compute the Williamson decomposition of M, which is assumed to be a `2n × 2n` real
+Compute the Williamson decomposition of M, which is assumed to be a ``2n × 2n`` real
 positive-definite matrix.
-Return `D, V` where `V` is a symplectic matrix, i.e. such that ``V Ω Vᵀ = Ω`` where
+Return `D, V` where `V` is a symplectic matrix, i.e. such that ``V \\sympmat \\transpose{V}
+= \\sympmat`` where
 
-```math
-Ω = Iₙ ⊗  ⎛  0  1 ⎞
-            ⎝ -1  0 ⎠
-```
+$symplectic_matrix_latex
 
-and `D` is a diagonal matrix of positive numbers, such that ``V D Vᵀ = M``.
+and `D` is a diagonal matrix of positive numbers, such that ``V D \\transpose{V} = M``.
 """
 function williamson(M)
     @assert size(M, 1) == size(M, 2) && iseven(size(M, 1))
@@ -102,7 +98,7 @@ function williamson(M)
     # The matrix Δ will turn out to be the inverse of D.
     sqrtM = sqrt(M)
     sqrtinvM = inv(sqrtM)
-    A = sqrtinvM * Ω(n) * sqrtinvM
+    A = sqrtinvM * _symplectic_matrix(n) * sqrtinvM
     U, K = schur(A)
 
     # diag(U, 1) gives us the elements [U[k, k+1] for k in 1:size(U, 1)], so here we get
@@ -135,8 +131,8 @@ end
     takagiautonne(A; svd_order=true)
 
 Compute the Takagi-Autonne decomposition of the complex symmetric matrix `A`.
-Return `D`, `U` such that `A = U D Uᵀ`, where `D` is a diagonal, positive-semidefinite
-matrix and `U` is unitary.
+Return `D`, `U` such that ``A = U D \\transpose{U}``, where `D` is a diagonal,
+positive-semidefinite matrix and `U` is unitary.
 
 Set `svd_order` to `true` (the default) to return the result by ordering the diagonal
 values of `D` in descending order, `false` for ascending order.
@@ -215,22 +211,31 @@ end
     euler(M)
 
 Compute the Euler, or Bloch-Messiah, decomposition of the symplectic matrix `M`.
-Return `L`, `D`, `R` such that `L * D * R = M`, where `L` and `R` are orthogonal symplectic
+Return `L`, `D`, `R` such that ``L D R = M``, where `L` and `R` are orthogonal symplectic
 matrices with respect to the matrix
 
-```math
-Ω = Iₙ ⊗  ⎛  0  1 ⎞
-            ⎝ -1  0 ⎠
-```
+$symplectic_matrix_latex
 
 and `D` is a diagonal matrix which can be written as
 
 ```math
-⎛ d₁   0  ⎞ ⊕ ⎛ d₂   0  ⎞ ⊕ ... ⊕ ⎛ dₙ   0  ⎞
-  ⎝ 0  1/d₁ ⎠   ⎝ 0  1/d₂ ⎠         ⎝ 0  1/dₙ ⎠
+\\begin{pmatrix}
+  d_1 & 0\\\\
+  0 & d_1^{-1}
+\\end{pmatrix}
+⊕
+\\begin{pmatrix}
+  d_2 & 0\\\\
+  0 & d_2^{-1}
+\\end{pmatrix}
+⊕ \\dotsb ⊕
+\\begin{pmatrix}
+  d_n & 0\\\\
+  0 & d_n^{-1}
+\\end{pmatrix}
 ```
 
-with ``dⱼ ≥ 1``.
+with ``d_j ≥ 1``.
 """
 function euler(M)
     L, D, R = _euler_xxpp(permute_to_xxpp(M))

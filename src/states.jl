@@ -15,8 +15,18 @@ function promote_array(arrays...)
     tuple([convert(Array{supertype}, array) for array in arrays]...)
 end
 
+symplectic_matrix_latex = """
+```math
+\\sympmat = I_n ⊗  
+\\begin{pmatrix}
+  0 & 1\\\\
+  -1 & 0
+\\end{pmatrix}
+```
 """
-    Ω(n)
+
+"""
+    _symplectic_matrix(n)
 
 Return the ``2n × 2n`` symplectic matrix
 
@@ -29,7 +39,7 @@ Iₙ ⊗ ⎜       ⎟
 # Example
 
 ```julia-repl
-julia> Ω(2)
+julia> GaussianStates._symplectic_matrix(2)
 4×4 Matrix{Int64}:
   0  1   0  0
  -1  0   0  0
@@ -37,14 +47,14 @@ julia> Ω(2)
   0  0  -1  0
 ```
 """
-Ω(n) = kron(I(n), [[0, -1] [1, 0]])
+_symplectic_matrix(n) = kron(I(n), [[0, -1] [1, 0]])
 
 """
     is_valid_covariance_matrix(σ; atol, rtol)
 
 Test whether the matrix `σ` satisfies the conditions to be a covariance matrix for a
 Gaussian state, i.e. is a ``2n × 2n`` symmetric matrix such that ``σ > 0`` and
-``σ + iΩ ≥ 0``.
+``σ + i\\sympmat ≥ 0``.
 
 Keyword arguments are forwarded to `isapprox` to adjust the numerical thresholds of the
 inexact equality comparisons; `atol` defaults to `eps(eltype(σ)) * norm(σ)` when comparing
@@ -88,14 +98,14 @@ function is_valid_covariance_matrix(σ; kwargs...)
     #
     # produces a small negative eigenvalue in this test:
     #
-    #   julia> eigmin(Hermitian(σ + im * Ω(3)))
+    #   julia> eigmin(Hermitian(σ + im * _symplectic_matrix(3)))
     #   -2.700059754488065e-16
     #
     # As before, we make the argument explicitly Hermitian before passing it to `eigmin`
     # so that it knows that the matrix is Hermitian (since we have already checked that σ
     # is "reasonably symmetric" we can be sure that σ + iΩ is "reasonably Hermitian") and
     # its eigenvalues should be real.
-    if eigmin(Hermitian(σ .+ im .* Ω(div(n, 2)))) <
+    if eigmin(Hermitian(σ .+ im .* _symplectic_matrix(div(n, 2)))) <
         -get(kwargs, :atol, eps(eltype(σ)) * norm(σ))
         println("Does not satisfy the uncertainty relation.")
         return false
@@ -223,12 +233,9 @@ end
     randsymplectic([T = Float64, ]n)
 
 Generate a random ``2n × 2n`` real symplectic matrix of element type `T` such that
-``S Ω Sᵀ = Ω``, with
+``S \\sympmat \\transpose{S} = \\sympmat``, with
 
-```
-Ω = Iₙ ⊗  ⎛  0  1 ⎞
-            ⎝ -1  0 ⎠
-```
+$symplectic_matrix_latex
 """
 function randsymplectic(::Type{T}, n) where {T<:Number}
     A = rand(n, n)
