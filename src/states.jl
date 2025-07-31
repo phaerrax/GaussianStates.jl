@@ -126,6 +126,12 @@ end
 GaussianState(σ::AbstractMatrix) = GaussianState(zeros(size(σ, 1)), σ)
 
 Base.eltype(g::GaussianState) = eltype(g.first_moments)
+
+"""
+    nmodes(g::GaussianState)
+
+Return the number of modes `g` is defined on.
+"""
 nmodes(g::GaussianState) = div(length(g.first_moments), 2)
 
 function Base.:(==)(g::GaussianState, h::GaussianState)
@@ -157,10 +163,20 @@ function thermalstate(n, β, ω::AbstractVector)
     return GaussianState(zeros(2n), diagm(permute_to_xpxp([λ; λ])))
 end
 
+"""
+    number(g::GaussianState)
+
+Return the mean number of photons in the state `g`.
+"""
 function number(g::GaussianState)
     return tr(g.covariance_matrix) / 4 + (norm(g.first_moments)^2) / 2 - nmodes(g) / 2
 end
 
+"""
+    purity(g::GaussianState)
+
+Return the purity of the state `g`.
+"""
 function purity(g::GaussianState)
     return inv(sqrt(det(g.covariance_matrix)))
 end
