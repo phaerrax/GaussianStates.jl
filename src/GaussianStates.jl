@@ -3,6 +3,8 @@ module GaussianStates
 using LinearAlgebra
 
 export GaussianState,
+    firstmoments,
+    covariancematrix,
     vacuumstate,
     nmodes,
     is_valid_covariance_matrix,

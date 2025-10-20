@@ -135,6 +135,9 @@ end
 
 GaussianState(σ::AbstractMatrix) = GaussianState(zeros(size(σ, 1)), σ)
 
+firstmoments(g::GaussianState) = g.first_moments
+covariancematrix(g::GaussianState) = g.covariance_matrix
+
 Base.eltype(g::GaussianState) = eltype(g.first_moments)
 
 """
