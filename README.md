@@ -25,6 +25,9 @@ R_i = \mathrm{tr}(\rho r_i)
 
 where $`r = (x_1, p_1, x_2, p_2, \dotsc, x_n, p_n)`$.
 
+See [here](https://phaerrax.github.io/GaussianStates.jl/stable/) for the
+documentation of this package.
+
 ## Installation
 
 ### From a registry
